@@ -179,7 +179,7 @@ export default function Passbook({ data, setData }) {
 
         {/* Tag filter pills */}
         {filterType !== 'transfer' && tags.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-none">
+          <div className="flex gap-2 overflow-x-auto pb-0.5 mb-2 scrollbar-none">
             <button
               onClick={() => { setFilterTags([]); saveFilter({ tags: [] }) }}
               className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
