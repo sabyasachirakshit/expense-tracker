@@ -55,12 +55,13 @@ function applyBalance(accs, r) {
 export default function Passbook({ data, setData }) {
   const { records = [], accounts = [], tags = [] } = data
   const now = new Date()
+  const pf  = data.settings?.passbookFilters ?? {}
 
   const [search, setSearch]               = useState('')
-  const [filterAccount, setFilterAccount] = useState('')
-  const [filterMonth, setFilterMonth]     = useState(-1)
-  const [filterYear, setFilterYear]       = useState(now.getFullYear())
-  const [filterType, setFilterType]       = useState(null)
+  const [filterAccount, setFilterAccount] = useState(pf.account ?? '')
+  const [filterMonth, setFilterMonth]     = useState(pf.month  ?? -1)
+  const [filterYear, setFilterYear]       = useState(pf.year   ?? now.getFullYear())
+  const [filterType, setFilterType]       = useState(pf.type   ?? null)
 
   const [editingRecord, setEditingRecord] = useState(null)
   const [deleteRecord, setDeleteRecord]   = useState(null)
@@ -117,6 +118,15 @@ export default function Passbook({ data, setData }) {
     setEditingRecord(null)
   }
 
+  const saveFilter = (updates) =>
+    setData((prev) => ({
+      ...prev,
+      settings: {
+        ...prev.settings,
+        passbookFilters: { ...(prev.settings?.passbookFilters ?? {}), ...updates },
+      },
+    }))
+
   const sc = 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none'
 
   return (
@@ -137,15 +147,15 @@ export default function Passbook({ data, setData }) {
 
         {/* Account + Month + Year */}
         <div className="flex gap-2">
-          <select value={filterAccount} onChange={(e) => setFilterAccount(e.target.value)} className={`flex-1 min-w-0 ${sc}`}>
+          <select value={filterAccount} onChange={(e) => { setFilterAccount(e.target.value); saveFilter({ account: e.target.value }) }} className={`flex-1 min-w-0 ${sc}`}>
             <option value="">All accounts</option>
             {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
           </select>
-          <select value={filterMonth} onChange={(e) => setFilterMonth(Number(e.target.value))} className={`w-20 ${sc}`}>
+          <select value={filterMonth} onChange={(e) => { const v = Number(e.target.value); setFilterMonth(v); saveFilter({ month: v }) }} className={`w-20 ${sc}`}>
             <option value={-1}>All</option>
             {MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
           </select>
-          <select value={filterYear} onChange={(e) => setFilterYear(Number(e.target.value))} className={`w-20 ${sc}`}>
+          <select value={filterYear} onChange={(e) => { const v = Number(e.target.value); setFilterYear(v); saveFilter({ year: v }) }} className={`w-20 ${sc}`}>
             {years.map((y) => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
@@ -155,7 +165,7 @@ export default function Passbook({ data, setData }) {
           {TYPE_FILTERS.map((f) => (
             <button
               key={String(f.key)}
-              onClick={() => setFilterType(f.key)}
+              onClick={() => { setFilterType(f.key); saveFilter({ type: f.key }) }}
               className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
                 filterType === f.key ? f.active : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
               }`}

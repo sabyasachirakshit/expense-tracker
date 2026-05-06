@@ -15,6 +15,13 @@ const defaultData = {
   settings: {
     pin: null,
     darkMode: false,
+    lastAccountId: null,
+    passbookFilters: {
+      account: '',
+      month: -1,
+      year: new Date().getFullYear(),
+      type: null,
+    },
   },
 }
 
@@ -32,7 +39,14 @@ export function useExpenseStore() {
           ...defaultData,
           ...parsed,
           tags: parsed.tags ?? defaultData.tags,
-          settings: { ...defaultData.settings, ...(parsed.settings || {}) },
+          settings: {
+            ...defaultData.settings,
+            ...(parsed.settings || {}),
+            passbookFilters: {
+              ...defaultData.settings.passbookFilters,
+              ...((parsed.settings || {}).passbookFilters || {}),
+            },
+          },
         }
       }
       return defaultData
