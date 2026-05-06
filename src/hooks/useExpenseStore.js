@@ -6,13 +6,22 @@ const defaultData = {
   records: [],
   categories: [],
   settings: {},
+  accounts: [{ id: 'wallet', name: 'Wallet', balance: 0 }],
 }
 
 export function useExpenseStore() {
   const [data, setData] = useState(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
-      return stored ? JSON.parse(stored) : defaultData
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed.primaryAccount && !parsed.accounts) {
+          parsed.accounts = [{ id: 'wallet', ...parsed.primaryAccount }]
+          delete parsed.primaryAccount
+        }
+        return { ...defaultData, ...parsed }
+      }
+      return defaultData
     } catch {
       return defaultData
     }
