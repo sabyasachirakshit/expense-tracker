@@ -5,7 +5,10 @@ const STORAGE_KEY = 'expense-tracker-data'
 const defaultData = {
   records: [],
   categories: [],
-  settings: {},
+  settings: {
+    pin: null,
+    darkMode: false,
+  },
   accounts: [{ id: 'wallet', name: 'Wallet', balance: 0 }],
 }
 
@@ -19,7 +22,11 @@ export function useExpenseStore() {
           parsed.accounts = [{ id: 'wallet', ...parsed.primaryAccount }]
           delete parsed.primaryAccount
         }
-        return { ...defaultData, ...parsed }
+        return {
+          ...defaultData,
+          ...parsed,
+          settings: { ...defaultData.settings, ...(parsed.settings || {}) },
+        }
       }
       return defaultData
     } catch {

@@ -47,18 +47,18 @@ export default function AccountsModal({ accounts, onSave, onClose }) {
     <div className="absolute inset-0 z-50 flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div
-        className="relative bg-white rounded-t-3xl px-5 pt-4 pb-8 shadow-2xl"
+        className="relative bg-white dark:bg-gray-900 rounded-t-3xl px-5 pt-4 pb-8 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
+        <div className="w-10 h-1 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-4" />
 
         {view === 'list' ? (
           <>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-800">Accounts</h2>
+              <h2 className="text-lg font-bold text-gray-800 dark:text-white">Accounts</h2>
               <button
                 onClick={onClose}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 text-lg leading-none"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-lg leading-none"
               >
                 ×
               </button>
@@ -68,15 +68,15 @@ export default function AccountsModal({ accounts, onSave, onClose }) {
               {accounts.map((account) => (
                 <div
                   key={account.id}
-                  className="flex items-center justify-between px-4 py-3.5 bg-gray-50 rounded-2xl"
+                  className="flex items-center justify-between px-4 py-3.5 bg-gray-50 dark:bg-gray-800 rounded-2xl"
                 >
                   <div>
-                    <p className="text-sm font-semibold text-gray-700">{account.name}</p>
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{account.name}</p>
                     <p className="text-indigo-600 font-bold text-base mt-0.5">₹ {fmt(account.balance)}</p>
                   </div>
                   <button
                     onClick={() => openEdit(account)}
-                    className="p-2 rounded-full bg-white shadow-sm border border-gray-100 text-gray-500"
+                    className="p-2 rounded-full bg-white dark:bg-gray-700 shadow-sm border border-gray-100 dark:border-gray-600 text-gray-500 dark:text-gray-400"
                     aria-label={`Edit ${account.name}`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
@@ -89,7 +89,7 @@ export default function AccountsModal({ accounts, onSave, onClose }) {
 
             <button
               onClick={openAdd}
-              className="w-full py-3.5 rounded-xl border-2 border-dashed border-indigo-300 text-indigo-600 font-semibold text-sm flex items-center justify-center gap-1.5 active:bg-indigo-50 transition-colors"
+              className="w-full py-3.5 rounded-xl border-2 border-dashed border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 font-semibold text-sm flex items-center justify-center gap-1.5 active:bg-indigo-50 dark:active:bg-indigo-900/30 transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -102,21 +102,21 @@ export default function AccountsModal({ accounts, onSave, onClose }) {
             <div className="flex items-center gap-2 mb-5">
               <button
                 onClick={() => setView('list')}
-                className="p-1.5 rounded-full bg-gray-100 text-gray-600"
+                className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
                 aria-label="Back"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <h2 className="text-lg font-bold text-gray-800">
+              <h2 className="text-lg font-bold text-gray-800 dark:text-white">
                 {editing ? 'Edit Account' : 'Add Account'}
               </h2>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
                   Account Name
                 </label>
                 <input
@@ -124,11 +124,11 @@ export default function AccountsModal({ accounts, onSave, onClose }) {
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
                   placeholder="e.g. Wallet, SBI Bank, Cash"
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl px-4 py-3 text-gray-800 dark:text-white text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
                   Balance (₹)
                 </label>
                 <input
@@ -138,7 +138,7 @@ export default function AccountsModal({ accounts, onSave, onClose }) {
                   placeholder="0.00"
                   inputMode="decimal"
                   min="0"
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl px-4 py-3 text-gray-800 dark:text-white text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
               </div>
             </div>
@@ -154,7 +154,7 @@ export default function AccountsModal({ accounts, onSave, onClose }) {
               )}
               <button
                 onClick={() => setView('list')}
-                className="flex-1 py-3.5 rounded-xl border border-gray-200 text-gray-600 font-semibold text-sm active:bg-gray-50 transition-colors"
+                className="flex-1 py-3.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-semibold text-sm active:bg-gray-50 dark:active:bg-gray-800 transition-colors"
               >
                 Cancel
               </button>
