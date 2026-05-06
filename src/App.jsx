@@ -25,7 +25,34 @@ function App() {
   const hasPin = !!data.settings?.pin
 
   const handleSaveAccounts = (updatedAccounts) => {
-    setData((prev) => ({ ...prev, accounts: updatedAccounts }))
+    setData((prev) => {
+      const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 5)
+      const adjustments = []
+
+      updatedAccounts.forEach((acc) => {
+        const old = prev.accounts.find((a) => a.id === acc.id)
+        if (!old || old.balance === acc.balance) return
+        const diff = acc.balance - old.balance
+        adjustments.push({
+          id: genId(),
+          type: diff > 0 ? 'income' : 'expense',
+          title: 'Balance Adjustment',
+          description: `${acc.name}: ₹${old.balance} → ₹${acc.balance}`,
+          amount: Math.abs(diff),
+          date: new Date().toISOString(),
+          tagIds: [],
+          accountId: acc.id,
+          fromAccountId: null,
+          toAccountId: null,
+        })
+      })
+
+      return {
+        ...prev,
+        accounts: updatedAccounts,
+        records: [...adjustments, ...prev.records],
+      }
+    })
   }
 
   const handleToggleDark = () => {
