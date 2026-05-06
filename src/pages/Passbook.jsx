@@ -233,13 +233,17 @@ export default function Passbook({ data, setData }) {
         </div>
       </div>
 
-      {/* List (scrollable) */}
-      <div className="flex-1 overflow-y-auto px-4 pb-4">
-        {filtered.length > 0 && (
-          <p className="pt-2 pb-1.5 text-xs text-gray-400 dark:text-gray-500">
+      {/* Count (fixed) */}
+      {filtered.length > 0 && (
+        <div className="px-4 pt-2 pb-1.5">
+          <p className="text-xs text-gray-400 dark:text-gray-500">
             {filtered.length} transaction{filtered.length !== 1 ? 's' : ''}
           </p>
-        )}
+        </div>
+      )}
+
+      {/* List (scrollable) */}
+      <div className="flex-1 overflow-y-auto px-4 pb-4">
         <div className="space-y-2.5">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-gray-400 dark:text-gray-600 gap-2">
