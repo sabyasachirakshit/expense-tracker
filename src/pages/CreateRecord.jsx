@@ -54,6 +54,11 @@ export default function CreateRecord({ data, setData }) {
     setData((prev) => ({ ...prev, settings: { ...prev.settings, lastAccountId: id } }))
   }
 
+  const handleDeleteTag = (id) => {
+    setSelectedTags((prev) => prev.filter((t) => t !== id))
+    setData((prev) => ({ ...prev, tags: prev.tags.filter((t) => t.id !== id) }))
+  }
+
   const toggleTag = (id) =>
     setSelectedTags((prev) => prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id])
 
@@ -210,18 +215,27 @@ export default function CreateRecord({ data, setData }) {
         {type !== 'transfer' && (
           <Field label="Tags">
             <div className="flex flex-wrap gap-2">
-              {tags.map((tag) => (
-                <button
-                  key={tag.id}
-                  onClick={() => toggleTag(tag.id)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                    selectedTags.includes(tag.id) ? 'text-white scale-105' : 'text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700'
-                  }`}
-                  style={selectedTags.includes(tag.id) ? { backgroundColor: tag.color } : {}}
-                >
-                  {tag.name}
-                </button>
-              ))}
+              {tags.map((tag) => {
+                const sel = selectedTags.includes(tag.id)
+                return (
+                  <div key={tag.id} className={`flex items-center rounded-full overflow-hidden transition-all ${sel ? 'scale-105' : ''}`}>
+                    <button
+                      onClick={() => toggleTag(tag.id)}
+                      className={`pl-3 pr-2 py-1.5 text-xs font-semibold ${sel ? 'text-white' : 'text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700'}`}
+                      style={sel ? { backgroundColor: tag.color } : {}}
+                    >
+                      {tag.name}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteTag(tag.id)}
+                      className={`pr-2 pl-1 py-1.5 text-sm leading-none ${sel ? 'text-white/70' : 'text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700'}`}
+                      style={sel ? { backgroundColor: tag.color } : {}}
+                    >
+                      ×
+                    </button>
+                  </div>
+                )
+              })}
               <button
                 onClick={() => setShowTagModal(true)}
                 className="px-3 py-1.5 rounded-full text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30"

@@ -62,6 +62,7 @@ export default function Passbook({ data, setData }) {
   const [filterMonth, setFilterMonth]     = useState(pf.month  ?? -1)
   const [filterYear, setFilterYear]       = useState(pf.year   ?? now.getFullYear())
   const [filterType, setFilterType]       = useState(pf.type   ?? null)
+  const [filterTag, setFilterTag]         = useState(pf.tag    ?? '')
 
   const [editingRecord, setEditingRecord] = useState(null)
   const [deleteRecord, setDeleteRecord]   = useState(null)
@@ -84,8 +85,9 @@ export default function Passbook({ data, setData }) {
     if (filterMonth !== -1 && d.getMonth() !== filterMonth) return false
     if (d.getFullYear() !== filterYear) return false
     if (search && !r.title.toLowerCase().includes(search.toLowerCase())) return false
+    if (filterTag && (!r.tagIds || !r.tagIds.includes(filterTag))) return false
     return true
-  }), [records, filterAccount, filterMonth, filterYear, search])
+  }), [records, filterAccount, filterMonth, filterYear, search, filterTag])
 
   const filtered = useMemo(() =>
     [...baseFiltered]
@@ -130,10 +132,10 @@ export default function Passbook({ data, setData }) {
   const sc = 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none'
 
   return (
-    <div className="min-h-full bg-gray-50 dark:bg-gray-900 flex flex-col overflow-x-hidden">
+    <div className="h-full bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
 
-      {/* Sticky header */}
-      <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 px-4 pt-4 pb-3 shadow-sm space-y-2">
+      {/* Fixed header */}
+      <div className="shrink-0 bg-white dark:bg-gray-800 px-4 pt-4 pb-3 shadow-sm space-y-2">
         <h1 className="text-base font-bold text-gray-800 dark:text-white">Passbook</h1>
 
         {/* Search */}
@@ -161,7 +163,7 @@ export default function Passbook({ data, setData }) {
         </div>
 
         {/* Type filter pills */}
-        <div className="flex gap-2 overflow-x-auto pb-0.5">
+        <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-none">
           {TYPE_FILTERS.map((f) => (
             <button
               key={String(f.key)}
@@ -174,10 +176,36 @@ export default function Passbook({ data, setData }) {
             </button>
           ))}
         </div>
+
+        {/* Tag filter pills */}
+        {filterType !== 'transfer' && tags.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-none">
+            <button
+              onClick={() => { setFilterTag(''); saveFilter({ tag: '' }) }}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                filterTag === '' ? 'bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+              }`}
+            >
+              All tags
+            </button>
+            {tags.map((tag) => (
+              <button
+                key={tag.id}
+                onClick={() => { setFilterTag(tag.id); saveFilter({ tag: tag.id }) }}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  filterTag === tag.id ? 'text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                }`}
+                style={filterTag === tag.id ? { backgroundColor: tag.color } : {}}
+              >
+                {tag.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Metrics */}
-      <div className="px-4 pt-3 pb-1">
+      <div className="shrink-0 px-4 pt-3 pb-1">
         <div className="grid grid-cols-3 gap-2">
           <div className="bg-green-50 dark:bg-green-900/20 rounded-xl px-3 py-2.5 text-center">
             <p className="text-[10px] font-semibold text-green-700 dark:text-green-400 uppercase tracking-wide">Income</p>
@@ -196,15 +224,14 @@ export default function Passbook({ data, setData }) {
         </div>
       </div>
 
-      {/* Count */}
-      {filtered.length > 0 && (
-        <p className="px-4 pt-2 pb-0.5 text-xs text-gray-400 dark:text-gray-500">
-          {filtered.length} transaction{filtered.length !== 1 ? 's' : ''}
-        </p>
-      )}
-
-      {/* List */}
-      <div className="flex-1 px-4 py-2 space-y-2.5 pb-4">
+      {/* List (scrollable) */}
+      <div className="flex-1 overflow-y-auto px-4 pb-4">
+        {filtered.length > 0 && (
+          <p className="pt-2 pb-1.5 text-xs text-gray-400 dark:text-gray-500">
+            {filtered.length} transaction{filtered.length !== 1 ? 's' : ''}
+          </p>
+        )}
+        <div className="space-y-2.5">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-gray-400 dark:text-gray-600 gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-12 h-12 opacity-40">
@@ -275,6 +302,7 @@ export default function Passbook({ data, setData }) {
             </div>
           )
         })}
+        </div>
       </div>
 
       {/* Description popup */}
