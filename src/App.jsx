@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Dashboard from './pages/Dashboard'
 import CreateRecord from './pages/CreateRecord'
+import Passbook from './pages/Passbook'
 import BottomNav from './components/BottomNav'
 import TopBar from './components/TopBar'
 import AccountsModal from './components/AccountsModal'
@@ -9,6 +10,7 @@ import { useExpenseStore } from './hooks/useExpenseStore'
 
 const PAGES = {
   dashboard: Dashboard,
+  passbook: Passbook,
   create: CreateRecord,
 }
 

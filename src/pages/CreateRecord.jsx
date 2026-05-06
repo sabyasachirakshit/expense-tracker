@@ -9,7 +9,8 @@ const TYPES = [
   { key: 'transfer',label: 'Transfer',active: 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 ring-1 ring-blue-200 dark:ring-blue-800' },
 ]
 
-const AMOUNT_COLOR = { expense: 'text-red-500', income: 'text-green-500', transfer: 'text-blue-500' }
+const AMOUNT_COLOR       = { expense: 'text-red-500',   income: 'text-green-500',   transfer: 'text-blue-500' }
+const PLACEHOLDER_COLOR  = { expense: 'placeholder:text-red-300 dark:placeholder:text-red-800', income: 'placeholder:text-green-300 dark:placeholder:text-green-800', transfer: 'placeholder:text-blue-300 dark:placeholder:text-blue-800' }
 
 function nowDate() { return new Date().toISOString().slice(0, 10) }
 function nowTime() {
@@ -91,7 +92,7 @@ export default function CreateRecord({ data, setData }) {
   const selectCls = 'w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2.5 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500'
 
   return (
-    <div className="min-h-full bg-gray-50 dark:bg-gray-900 pb-6">
+    <div className="min-h-full bg-gray-50 dark:bg-gray-900 pb-6 overflow-x-hidden">
       {/* Header + type selector */}
       <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 px-4 pt-4 pb-3 shadow-sm">
         <h1 className="text-base font-bold text-gray-800 dark:text-white mb-3">New Record</h1>
@@ -123,7 +124,7 @@ export default function CreateRecord({ data, setData }) {
               placeholder="0.00"
               inputMode="decimal"
               min="0"
-              className={`flex-1 text-3xl font-bold bg-transparent focus:outline-none ${AMOUNT_COLOR[type]} placeholder:opacity-30`}
+              className={`flex-1 text-3xl font-bold bg-transparent focus:outline-none ${AMOUNT_COLOR[type]} ${PLACEHOLDER_COLOR[type]}`}
             />
           </div>
         </div>
