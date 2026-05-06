@@ -72,7 +72,7 @@ export default function AccountsModal({ accounts, onSave, onClose }) {
                 >
                   <div>
                     <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{account.name}</p>
-                    <p className="text-indigo-600 font-bold text-base mt-0.5">₹ {fmt(account.balance)}</p>
+                    <p className="text-indigo-600 dark:text-white font-bold text-base mt-0.5">₹ {fmt(account.balance)}</p>
                   </div>
                   <button
                     onClick={() => openEdit(account)}
