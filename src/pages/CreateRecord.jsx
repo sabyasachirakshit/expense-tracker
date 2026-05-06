@@ -39,12 +39,20 @@ export default function CreateRecord({ data, setData }) {
   const [description, setDescription] = useState('')
   const [date, setDate]               = useState(nowDate)
   const [time, setTime]               = useState(nowTime)
-  const [accountId, setAccountId]     = useState(accounts[0]?.id ?? '')
+  const [accountId, setAccountId]     = useState(() => {
+    const last = data.settings?.lastAccountId
+    return (last && accounts.find((a) => a.id === last)) ? last : accounts[0]?.id ?? ''
+  })
   const [fromId, setFromId]           = useState(accounts[0]?.id ?? '')
   const [toId, setToId]               = useState(accounts[1]?.id ?? accounts[0]?.id ?? '')
   const [selectedTags, setSelectedTags] = useState([])
   const [showTagModal, setShowTagModal] = useState(false)
   const [saved, setSaved]             = useState(false)
+
+  const handleAccountChange = (id) => {
+    setAccountId(id)
+    setData((prev) => ({ ...prev, settings: { ...prev.settings, lastAccountId: id } }))
+  }
 
   const toggleTag = (id) =>
     setSelectedTags((prev) => prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id])
@@ -132,7 +140,7 @@ export default function CreateRecord({ data, setData }) {
         {/* Account(s) */}
         {type !== 'transfer' ? (
           <Field label="Account">
-            <select value={accountId} onChange={(e) => setAccountId(e.target.value)} className={selectCls}>
+            <select value={accountId} onChange={(e) => handleAccountChange(e.target.value)} className={selectCls}>
               {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>
           </Field>
