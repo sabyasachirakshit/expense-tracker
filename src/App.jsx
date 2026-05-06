@@ -57,7 +57,7 @@ function App() {
               onToggleDark={handleToggleDark}
             />
             <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
-              <PageComponent />
+              <PageComponent data={data} setData={setData} />
             </main>
             <BottomNav activePage={activePage} setActivePage={setActivePage} />
             {showAccounts && (
