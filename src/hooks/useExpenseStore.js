@@ -21,7 +21,7 @@ const defaultData = {
       month: -1,
       year: new Date().getFullYear(),
       type: null,
-      tag: '',
+      tags: [],
     },
   },
 }

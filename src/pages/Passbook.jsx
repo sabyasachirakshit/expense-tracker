@@ -62,7 +62,7 @@ export default function Passbook({ data, setData }) {
   const [filterMonth, setFilterMonth]     = useState(pf.month  ?? -1)
   const [filterYear, setFilterYear]       = useState(pf.year   ?? now.getFullYear())
   const [filterType, setFilterType]       = useState(pf.type   ?? null)
-  const [filterTag, setFilterTag]         = useState(pf.tag    ?? '')
+  const [filterTags, setFilterTags]       = useState(pf.tags ?? [])
 
   const [editingRecord, setEditingRecord] = useState(null)
   const [deleteRecord, setDeleteRecord]   = useState(null)
@@ -85,9 +85,9 @@ export default function Passbook({ data, setData }) {
     if (filterMonth !== -1 && d.getMonth() !== filterMonth) return false
     if (d.getFullYear() !== filterYear) return false
     if (search && !r.title.toLowerCase().includes(search.toLowerCase())) return false
-    if (filterTag && (!r.tagIds || !r.tagIds.includes(filterTag))) return false
+    if (filterTags.length > 0 && (!r.tagIds || !r.tagIds.some((tid) => filterTags.includes(tid)))) return false
     return true
-  }), [records, filterAccount, filterMonth, filterYear, search, filterTag])
+  }), [records, filterAccount, filterMonth, filterYear, search, filterTags])
 
   const filtered = useMemo(() =>
     [...baseFiltered]
@@ -181,25 +181,34 @@ export default function Passbook({ data, setData }) {
         {filterType !== 'transfer' && tags.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-none">
             <button
-              onClick={() => { setFilterTag(''); saveFilter({ tag: '' }) }}
+              onClick={() => { setFilterTags([]); saveFilter({ tags: [] }) }}
               className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                filterTag === '' ? 'bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                filterTags.length === 0 ? 'bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
               }`}
             >
               All tags
             </button>
-            {tags.map((tag) => (
-              <button
-                key={tag.id}
-                onClick={() => { setFilterTag(tag.id); saveFilter({ tag: tag.id }) }}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                  filterTag === tag.id ? 'text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
-                }`}
-                style={filterTag === tag.id ? { backgroundColor: tag.color } : {}}
-              >
-                {tag.name}
-              </button>
-            ))}
+            {tags.map((tag) => {
+              const active = filterTags.includes(tag.id)
+              return (
+                <button
+                  key={tag.id}
+                  onClick={() => {
+                    const next = active
+                      ? filterTags.filter((t) => t !== tag.id)
+                      : [...filterTags, tag.id]
+                    setFilterTags(next)
+                    saveFilter({ tags: next })
+                  }}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                    active ? 'text-white ring-2 ring-offset-1 ring-offset-white dark:ring-offset-gray-800' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                  }`}
+                  style={active ? { backgroundColor: tag.color, ringColor: tag.color } : {}}
+                >
+                  {tag.name}
+                </button>
+              )
+            })}
           </div>
         )}
       </div>
