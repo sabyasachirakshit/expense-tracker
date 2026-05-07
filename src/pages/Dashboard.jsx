@@ -13,6 +13,7 @@ function fmtShort(n) {
 export default function Dashboard({ data }) {
   const { records = [] } = data
   const now = new Date()
+  const [filterMonth, setFilterMonth] = useState(-1)
   const [filterYear, setFilterYear]   = useState(now.getFullYear())
 
   const years = useMemo(() => {
@@ -21,7 +22,12 @@ export default function Dashboard({ data }) {
     return [...ys].sort((a, b) => b - a)
   }, [records])
 
-  const yearRecords = useMemo(() => records.filter((r) => new Date(r.date).getFullYear() === filterYear), [records, filterYear])
+  const filteredRecords = useMemo(() => records.filter((r) => {
+    const d = new Date(r.date)
+    const matchYear = d.getFullYear() === filterYear
+    const matchMonth = filterMonth === -1 || d.getMonth() === filterMonth
+    return matchYear && matchMonth
+  }), [records, filterYear, filterMonth])
 
   const monthlyData = useMemo(() => {
     const months = Array.from({ length: 12 }, (_, i) => ({
@@ -29,16 +35,18 @@ export default function Dashboard({ data }) {
       income: 0,
       expense: 0,
     }))
-    yearRecords.forEach((r) => {
-      const m = new Date(r.date).getMonth()
-      if (r.type === 'income') months[m].income += r.amount
-      if (r.type === 'expense') months[m].expense += r.amount
-    })
+    records
+      .filter((r) => new Date(r.date).getFullYear() === filterYear)
+      .forEach((r) => {
+        const m = new Date(r.date).getMonth()
+        if (r.type === 'income') months[m].income += r.amount
+        if (r.type === 'expense') months[m].expense += r.amount
+      })
     return months
-  }, [yearRecords])
+  }, [records, filterYear])
 
-  const totalIncome  = useMemo(() => monthlyData.reduce((s, m) => s + m.income, 0), [monthlyData])
-  const totalExpense = useMemo(() => monthlyData.reduce((s, m) => s + m.expense, 0), [monthlyData])
+  const totalIncome  = useMemo(() => filteredRecords.filter((r) => r.type === 'income').reduce((s, r) => s + r.amount, 0), [filteredRecords])
+  const totalExpense = useMemo(() => filteredRecords.filter((r) => r.type === 'expense').reduce((s, r) => s + r.amount, 0), [filteredRecords])
   const net = totalIncome - totalExpense
 
   const pieData = useMemo(() => [
@@ -53,7 +61,11 @@ export default function Dashboard({ data }) {
       {/* Header */}
       <div className="shrink-0 bg-white dark:bg-gray-800 px-4 pt-4 pb-3 shadow-sm space-y-2">
         <h1 className="text-base font-bold text-gray-800 dark:text-white">Dashboard</h1>
-        <div className="flex justify-end">
+        <div className="flex gap-2">
+          <select value={filterMonth} onChange={(e) => setFilterMonth(Number(e.target.value))} className={`flex-1 ${selectCls}`}>
+            <option value={-1}>All months</option>
+            {MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
+          </select>
           <select value={filterYear} onChange={(e) => setFilterYear(Number(e.target.value))} className={`w-24 ${selectCls}`}>
             {years.map((y) => <option key={y} value={y}>{y}</option>)}
           </select>
