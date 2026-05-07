@@ -35,7 +35,7 @@ function App() {
         const diff = acc.balance - old.balance
         adjustments.push({
           id: genId(),
-          type: diff > 0 ? 'income' : 'expense',
+          type: 'adjustment',
           title: 'Balance Adjustment',
           description: `${acc.name}: ₹${old.balance} → ₹${acc.balance}`,
           amount: Math.abs(diff),

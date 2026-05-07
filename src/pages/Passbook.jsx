@@ -4,20 +4,22 @@ import EditRecordModal from '../components/EditRecordModal'
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 const TYPE_BADGE = {
-  expense:  'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
-  income:   'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400',
-  transfer: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
+  expense:    'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
+  income:     'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400',
+  transfer:   'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
+  adjustment: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400',
 }
 
 const TYPE_FILTERS = [
-  { key: null,       label: 'All',      active: 'bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900' },
-  { key: 'expense',  label: 'Expense',  active: 'bg-red-500 text-white' },
-  { key: 'income',   label: 'Income',   active: 'bg-green-500 text-white' },
-  { key: 'transfer', label: 'Transfer', active: 'bg-blue-500 text-white' },
+  { key: null,       label: 'All',        active: 'bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900' },
+  { key: 'expense',  label: 'Expense',    active: 'bg-red-500 text-white' },
+  { key: 'income',   label: 'Income',     active: 'bg-green-500 text-white' },
+  { key: 'transfer', label: 'Transfer',   active: 'bg-blue-500 text-white' },
+  { key: 'adjustment', label: 'Adjustment', active: 'bg-purple-500 text-white' },
 ]
 
 function fmtAmt(amount, type) {
-  const sign = type === 'expense' ? '−' : type === 'income' ? '+' : '⇄'
+  const sign = type === 'expense' ? '−' : type === 'income' ? '+' : type === 'adjustment' ? '±' : '⇄'
   return `${sign}₹${Number(amount).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 }
 
@@ -287,7 +289,12 @@ export default function Passbook({ data, setData }) {
 
                 {/* Right: amount + actions */}
                 <div className="flex flex-col items-end gap-2 shrink-0">
-                  <p className={`text-sm font-bold ${record.type === 'expense' ? 'text-red-500' : record.type === 'income' ? 'text-green-500' : 'text-blue-500'}`}>
+                  <p className={`text-sm font-bold ${
+                    record.type === 'expense' ? 'text-red-500' :
+                    record.type === 'income'  ? 'text-green-500' :
+                    record.type === 'adjustment' ? 'text-purple-500' :
+                    'text-blue-500'
+                  }`}>
                     {fmtAmt(record.amount, record.type)}
                   </p>
                   <div className="flex items-center gap-1">
