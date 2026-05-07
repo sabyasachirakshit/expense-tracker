@@ -11,10 +11,11 @@ function fmtShort(n) {
 }
 
 export default function Dashboard({ data }) {
-  const { records = [] } = data
+  const { records = [], accounts = [] } = data
   const now = new Date()
   const [filterMonth, setFilterMonth] = useState(-1)
   const [filterYear, setFilterYear]   = useState(now.getFullYear())
+  const [filterAccount, setFilterAccount] = useState('')
 
   const years = useMemo(() => {
     const ys = new Set(records.map((r) => new Date(r.date).getFullYear()))
@@ -26,8 +27,13 @@ export default function Dashboard({ data }) {
     const d = new Date(r.date)
     const matchYear = d.getFullYear() === filterYear
     const matchMonth = filterMonth === -1 || d.getMonth() === filterMonth
-    return matchYear && matchMonth
-  }), [records, filterYear, filterMonth])
+    const matchAccount = !filterAccount || (
+      r.type === 'transfer'
+        ? r.fromAccountId === filterAccount || r.toAccountId === filterAccount
+        : r.accountId === filterAccount
+    )
+    return matchYear && matchMonth && matchAccount
+  }), [records, filterYear, filterMonth, filterAccount])
 
   const monthlyData = useMemo(() => {
     const months = Array.from({ length: 12 }, (_, i) => ({
@@ -62,11 +68,15 @@ export default function Dashboard({ data }) {
       <div className="shrink-0 bg-white dark:bg-gray-800 px-4 pt-4 pb-3 shadow-sm space-y-2">
         <h1 className="text-base font-bold text-gray-800 dark:text-white">Dashboard</h1>
         <div className="flex gap-2">
-          <select value={filterMonth} onChange={(e) => setFilterMonth(Number(e.target.value))} className={`flex-1 ${selectCls}`}>
-            <option value={-1}>All months</option>
-            {MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
+          <select value={filterAccount} onChange={(e) => setFilterAccount(e.target.value)} className={`flex-1 min-w-0 ${selectCls}`}>
+            <option value="">All accounts</option>
+            {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
           </select>
-          <select value={filterYear} onChange={(e) => setFilterYear(Number(e.target.value))} className={`w-24 ${selectCls}`}>
+          <select value={filterMonth} onChange={(e) => setFilterMonth(Number(e.target.value))} className={`w-20 ${selectCls}`}>
+            <option value={-1}>All</option>
+            {MONTHS.map((m, i) => <option key={i} value={i}>{m.slice(0, 3)}</option>)}
+          </select>
+          <select value={filterYear} onChange={(e) => setFilterYear(Number(e.target.value))} className={`w-20 ${selectCls}`}>
             {years.map((y) => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
