@@ -229,7 +229,14 @@ function BudgetFormModal({ initial, presetParentId, allBudgets, accounts, tags, 
     (effectivePeriod === 'yearly' || b.month === effectiveMonth)
   )
 
-  const isValid = label.trim().length > 0 && !!parseFloat(amount)
+  const siblingTotal   = parentBudget
+    ? allBudgets.filter((b) => b.parentId === parentId && b.id !== initial?.id).reduce((s, b) => s + b.amount, 0)
+    : 0
+  const parentAvailable = parentBudget ? parentBudget.amount - siblingTotal : Infinity
+  const amountVal       = parseFloat(amount) || 0
+  const exceedsParent   = !!parentBudget && amountVal > parentAvailable
+
+  const isValid = label.trim().length > 0 && !!parseFloat(amount) && !exceedsParent
 
   const handleSave = () => {
     if (!isValid) return
@@ -351,13 +358,36 @@ function BudgetFormModal({ initial, presetParentId, allBudgets, accounts, tags, 
 
           {/* Amount */}
           <div>
-            <span className={lbl}>Budget Amount (₹)</span>
-            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2.5 focus-within:ring-2 focus-within:ring-indigo-500">
-              <span className="text-indigo-500 font-bold text-lg">₹</span>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className={lbl.replace('mb-1.5', '')}>Budget Amount (₹)</span>
+              {parentBudget && (
+                <span className={`text-[11px] font-semibold ${
+                  parentAvailable <= 0 ? 'text-red-500' : 'text-gray-400 dark:text-gray-500'
+                }`}>
+                  Max: ₹{fmtNum(Math.max(0, parentAvailable))}
+                </span>
+              )}
+            </div>
+            <div className={`flex items-center gap-2 bg-gray-50 dark:bg-gray-700 border rounded-xl px-3 py-2.5 focus-within:ring-2 ${
+              exceedsParent
+                ? 'border-red-400 dark:border-red-600 focus-within:ring-red-400'
+                : 'border-gray-200 dark:border-gray-600 focus-within:ring-indigo-500'
+            }`}>
+              <span className={`font-bold text-lg ${exceedsParent ? 'text-red-500' : 'text-indigo-500'}`}>₹</span>
               <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)}
                 placeholder="0" inputMode="decimal"
                 className="flex-1 bg-transparent text-gray-800 dark:text-white text-lg font-bold focus:outline-none placeholder:text-gray-300 dark:placeholder:text-gray-600" />
             </div>
+            {exceedsParent && (
+              <p className="mt-1.5 text-xs text-red-500 font-semibold">
+                Exceeds parent budget — reduce by ₹{fmtNum(amountVal - parentAvailable)}.
+              </p>
+            )}
+            {parentBudget && !exceedsParent && siblingTotal > 0 && amountVal > 0 && (
+              <p className="mt-1.5 text-[11px] text-gray-400 dark:text-gray-500">
+                ₹{fmtNum(siblingTotal)} already allocated to other sub-budgets.
+              </p>
+            )}
           </div>
 
           {/* Account */}
