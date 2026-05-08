@@ -71,14 +71,25 @@ export default function Dashboard({ data }) {
       expense: 0,
     }))
     records
-      .filter((r) => new Date(r.date).getFullYear() === filterYear)
+      .filter((r) => {
+        const d = new Date(r.date)
+        if (d.getFullYear() !== filterYear) return false
+        if (filterAccount) {
+          const inAcc = r.type === 'transfer'
+            ? r.fromAccountId === filterAccount || r.toAccountId === filterAccount
+            : r.accountId === filterAccount
+          if (!inAcc) return false
+        }
+        if (filterTags.length > 0 && (!r.tagIds || !r.tagIds.some((t) => filterTags.includes(t)))) return false
+        return true
+      })
       .forEach((r) => {
         const m = new Date(r.date).getMonth()
         if (r.type === 'income') months[m].income += r.amount
         if (r.type === 'expense') months[m].expense += r.amount
       })
     return months
-  }, [records, filterYear])
+  }, [records, filterYear, filterAccount, filterTags])
 
   const totalIncome  = useMemo(() => filteredRecords.filter((r) => r.type === 'income').reduce((s, r) => s + r.amount, 0), [filteredRecords])
   const totalExpense = useMemo(() => filteredRecords.filter((r) => r.type === 'expense').reduce((s, r) => s + r.amount, 0), [filteredRecords])
