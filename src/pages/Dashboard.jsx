@@ -10,8 +10,15 @@ function fmtShort(n) {
   return n.toLocaleString('en-IN', { maximumFractionDigits: 0 })
 }
 
+function budgetBarColor(pct) {
+  if (pct >= 100) return { bar: 'bg-red-500',    text: 'text-red-600 dark:text-red-400' }
+  if (pct >= 85)  return { bar: 'bg-orange-400',  text: 'text-orange-600 dark:text-orange-400' }
+  if (pct >= 60)  return { bar: 'bg-yellow-400',  text: 'text-yellow-600 dark:text-yellow-500' }
+  return           { bar: 'bg-green-500',   text: 'text-green-600 dark:text-green-400' }
+}
+
 export default function Dashboard({ data }) {
-  const { records = [], accounts = [], tags = [] } = data
+  const { records = [], accounts = [], tags = [], budgets = [] } = data
   const isDark = data.settings?.darkMode ?? false
   const tickFill = isDark ? '#9ca3af' : '#6b7280'
   const now = new Date()
@@ -63,6 +70,36 @@ export default function Dashboard({ data }) {
     { name: 'Income', value: totalIncome },
     { name: 'Expense', value: totalExpense },
   ], [totalIncome, totalExpense])
+
+  const budgetOverview = useMemo(() => {
+    const rootBudgets = budgets.filter((b) => !b.parentId)
+    const relevant = filterMonth !== -1
+      ? rootBudgets.filter((b) => b.period === 'monthly' && b.year === filterYear && b.month === filterMonth)
+      : rootBudgets.filter((b) => b.period === 'yearly'  && b.year === filterYear)
+    return relevant.map((b) => {
+      const spent = records
+        .filter((r) => {
+          if (r.type !== 'expense') return false
+          const d = new Date(r.date)
+          if (b.period === 'monthly') {
+            if (d.getFullYear() !== b.year || d.getMonth() !== b.month) return false
+          } else {
+            if (d.getFullYear() !== b.year) return false
+          }
+          if (b.accountId && r.accountId !== b.accountId) return false
+          if (b.tagId && (!r.tagIds || !r.tagIds.includes(b.tagId))) return false
+          return true
+        })
+        .reduce((s, r) => s + r.amount, 0)
+      const pct      = b.amount > 0 ? Math.round((spent / b.amount) * 100) : 0
+      const subCount = budgets.filter((s) => s.parentId === b.id).length
+      return { ...b, spent, pct, subCount }
+    })
+  }, [budgets, records, filterMonth, filterYear])
+
+  const bOverTotal  = budgetOverview.reduce((s, b) => s + b.amount, 0)
+  const bOverSpent  = budgetOverview.reduce((s, b) => s + b.spent,  0)
+  const bOverCount  = budgetOverview.filter((b) => b.pct >= 100).length
 
   const selectCls = 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none'
 
@@ -147,6 +184,90 @@ export default function Dashboard({ data }) {
 
       {/* Charts */}
       <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4">
+
+        {/* Budget Overview */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Budget Overview</h3>
+            <span className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">
+              {filterMonth !== -1 ? `${MONTHS[filterMonth]} ${filterYear}` : `${filterYear} · yearly`}
+            </span>
+          </div>
+
+          {filterMonth === -1 && budgetOverview.length === 0 ? (
+            <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-3">
+              Select a month above to see monthly budget progress.
+            </p>
+          ) : budgetOverview.length === 0 ? (
+            <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-3">
+              No budgets set for this period — create one in the Budget tab.
+            </p>
+          ) : (
+            <>
+              {/* Summary row */}
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl px-2.5 py-2 text-center">
+                  <p className="text-[9px] font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide">Budgeted</p>
+                  <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 mt-0.5">₹{fmtShort(bOverTotal)}</p>
+                </div>
+                <div className="bg-red-50 dark:bg-red-900/20 rounded-xl px-2.5 py-2 text-center">
+                  <p className="text-[9px] font-semibold text-red-600 dark:text-red-400 uppercase tracking-wide">Spent</p>
+                  <p className="text-xs font-bold text-red-600 dark:text-red-400 mt-0.5">₹{fmtShort(bOverSpent)}</p>
+                </div>
+                <div className={`rounded-xl px-2.5 py-2 text-center ${
+                  bOverCount > 0 ? 'bg-red-100 dark:bg-red-900/30' : 'bg-green-50 dark:bg-green-900/20'
+                }`}>
+                  <p className={`text-[9px] font-semibold uppercase tracking-wide ${
+                    bOverCount > 0 ? 'text-red-600 dark:text-red-300' : 'text-green-600 dark:text-green-400'
+                  }`}>{bOverCount > 0 ? 'Over limit' : 'Left'}</p>
+                  <p className={`text-xs font-bold mt-0.5 ${
+                    bOverCount > 0 ? 'text-red-600 dark:text-red-300' : 'text-green-600 dark:text-green-400'
+                  }`}>
+                    {bOverCount > 0
+                      ? `${bOverCount} budget${bOverCount > 1 ? 's' : ''}`
+                      : `₹${fmtShort(Math.max(0, bOverTotal - bOverSpent))}`
+                    }
+                  </p>
+                </div>
+              </div>
+
+              {/* Per-budget rows */}
+              <div className="space-y-3">
+                {budgetOverview.map((b) => {
+                  const c = budgetBarColor(b.pct)
+                  const tag = b.tagId ? tags.find((t) => t.id === b.tagId) : null
+                  const acc = b.accountId ? accounts.find((a) => a.id === b.accountId) : null
+                  return (
+                    <div key={b.id}>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          {tag && <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />}
+                          <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 truncate">{b.label}</p>
+                          {acc && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 shrink-0">{acc.name}</span>}
+                          {b.subCount > 0 && <span className="text-[9px] text-gray-400 dark:text-gray-500 shrink-0">+{b.subCount} sub</span>}
+                        </div>
+                        <div className="flex items-center gap-1.5 ml-2 shrink-0">
+                          <span className={`text-[10px] font-bold ${c.text}`}>{b.pct}%</span>
+                          {b.pct >= 100 && (
+                            <span className="text-[9px] font-bold text-red-500 bg-red-50 dark:bg-red-900/30 px-1.5 py-0.5 rounded-full">Over!</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full transition-all duration-500 ${c.bar}`} style={{ width: `${Math.min(b.pct, 100)}%` }} />
+                      </div>
+                      <div className="flex justify-between mt-0.5">
+                        <span className="text-[10px] text-gray-400 dark:text-gray-500">₹{fmtShort(b.spent)} spent</span>
+                        <span className="text-[10px] text-gray-400 dark:text-gray-500">of ₹{fmtShort(b.amount)}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
+        </div>
+
         {/* Donut chart */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-4">
           <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Income vs Expense</h3>
