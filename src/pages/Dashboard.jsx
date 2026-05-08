@@ -11,11 +11,12 @@ function fmtShort(n) {
 }
 
 export default function Dashboard({ data }) {
-  const { records = [], accounts = [] } = data
+  const { records = [], accounts = [], tags = [] } = data
   const now = new Date()
-  const [filterMonth, setFilterMonth] = useState(-1)
-  const [filterYear, setFilterYear]   = useState(now.getFullYear())
+  const [filterMonth, setFilterMonth]   = useState(-1)
+  const [filterYear, setFilterYear]     = useState(now.getFullYear())
   const [filterAccount, setFilterAccount] = useState('')
+  const [filterTags, setFilterTags]     = useState([])
 
   const years = useMemo(() => {
     const ys = new Set(records.map((r) => new Date(r.date).getFullYear()))
@@ -32,8 +33,9 @@ export default function Dashboard({ data }) {
         ? r.fromAccountId === filterAccount || r.toAccountId === filterAccount
         : r.accountId === filterAccount
     )
-    return matchYear && matchMonth && matchAccount
-  }), [records, filterYear, filterMonth, filterAccount])
+    const matchTags = filterTags.length === 0 || (r.tagIds && r.tagIds.some((t) => filterTags.includes(t)))
+    return matchYear && matchMonth && matchAccount && matchTags
+  }), [records, filterYear, filterMonth, filterAccount, filterTags])
 
   const monthlyData = useMemo(() => {
     const months = Array.from({ length: 12 }, (_, i) => ({
@@ -80,6 +82,37 @@ export default function Dashboard({ data }) {
             {years.map((y) => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
+        {tags.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
+            <button
+              onClick={() => setFilterTags([])}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                filterTags.length === 0
+                  ? 'bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+              }`}
+            >
+              All tags
+            </button>
+            {tags.map((tag) => {
+              const active = filterTags.includes(tag.id)
+              return (
+                <button
+                  key={tag.id}
+                  onClick={() => setFilterTags((prev) =>
+                    active ? prev.filter((t) => t !== tag.id) : [...prev, tag.id]
+                  )}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                    active ? 'text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                  }`}
+                  style={active ? { backgroundColor: tag.color } : {}}
+                >
+                  {tag.name}
+                </button>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Summary cards */}
