@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, Bar } from 'recharts'
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -22,10 +22,28 @@ export default function Dashboard({ data }) {
   const isDark = data.settings?.darkMode ?? false
   const tickFill = isDark ? '#9ca3af' : '#6b7280'
   const now = new Date()
-  const [filterMonth, setFilterMonth]   = useState(-1)
-  const [filterYear, setFilterYear]     = useState(now.getFullYear())
-  const [filterAccount, setFilterAccount] = useState('')
-  const [filterTags, setFilterTags]     = useState([])
+  const [filterMonth, setFilterMonth]   = useState(() => {
+    const v = localStorage.getItem('dash_filterMonth')
+    return v !== null ? Number(v) : -1
+  })
+  const [filterYear, setFilterYear]     = useState(() => {
+    const v = localStorage.getItem('dash_filterYear')
+    return v !== null ? Number(v) : now.getFullYear()
+  })
+  const [filterAccount, setFilterAccount] = useState(() =>
+    localStorage.getItem('dash_filterAccount') ?? ''
+  )
+  const [filterTags, setFilterTags]     = useState(() => {
+    try { return JSON.parse(localStorage.getItem('dash_filterTags') ?? '[]') }
+    catch { return [] }
+  })
+
+  useEffect(() => {
+    localStorage.setItem('dash_filterMonth',   String(filterMonth))
+    localStorage.setItem('dash_filterYear',    String(filterYear))
+    localStorage.setItem('dash_filterAccount', filterAccount)
+    localStorage.setItem('dash_filterTags',    JSON.stringify(filterTags))
+  }, [filterMonth, filterYear, filterAccount, filterTags])
 
   const years = useMemo(() => {
     const ys = new Set(records.map((r) => new Date(r.date).getFullYear()))
