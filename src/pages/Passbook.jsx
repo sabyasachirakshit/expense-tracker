@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import EditRecordModal from '../components/EditRecordModal'
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -26,6 +26,61 @@ function fmtAmt(amount, type) {
 function fmtDate(iso) {
   const d = new Date(iso)
   return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()} · ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
+}
+
+function ScrollablePills({ children, className = '' }) {
+  const ref = useRef(null)
+  const [canLeft, setCanLeft]   = useState(false)
+  const [canRight, setCanRight] = useState(false)
+
+  const check = () => {
+    const el = ref.current
+    if (!el) return
+    setCanLeft(el.scrollLeft > 2)
+    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2)
+  }
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    check()
+    const ro = new ResizeObserver(check)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const scroll = (dir) => ref.current?.scrollBy({ left: dir * 140, behavior: 'smooth' })
+
+  return (
+    <div className={`relative ${className}`}>
+      {canLeft && (
+        <div className="absolute left-0 top-0 bottom-0 w-8 z-10 flex items-center bg-gradient-to-r from-white dark:from-gray-800 to-transparent pointer-events-none">
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => scroll(-1)}
+            className="pointer-events-auto ml-0.5 w-5 h-5 flex items-center justify-center rounded-full bg-white dark:bg-gray-700 shadow text-gray-500 dark:text-gray-300 text-sm font-bold leading-none"
+          >‹</button>
+        </div>
+      )}
+      <div
+        ref={ref}
+        onScroll={check}
+        className="flex gap-2 overflow-x-auto pb-0.5"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {children}
+      </div>
+      {canRight && (
+        <div className="absolute right-0 top-0 bottom-0 w-8 z-10 flex items-center justify-end bg-gradient-to-l from-white dark:from-gray-800 to-transparent pointer-events-none">
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => scroll(1)}
+            className="pointer-events-auto mr-0.5 w-5 h-5 flex items-center justify-center rounded-full bg-white dark:bg-gray-700 shadow text-gray-500 dark:text-gray-300 text-sm font-bold leading-none"
+          >›</button>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function fmtShort(n) {
@@ -165,7 +220,7 @@ export default function Passbook({ data, setData }) {
         </div>
 
         {/* Type filter pills */}
-        <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-none">
+        <ScrollablePills>
           {TYPE_FILTERS.map((f) => (
             <button
               key={String(f.key)}
@@ -177,11 +232,11 @@ export default function Passbook({ data, setData }) {
               {f.label}
             </button>
           ))}
-        </div>
+        </ScrollablePills>
 
         {/* Tag filter pills */}
         {filterType !== 'transfer' && tags.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-0.5 mb-2 scrollbar-none">
+          <ScrollablePills className="mb-2">
             <button
               onClick={() => { setFilterTags([]); saveFilter({ tags: [] }) }}
               className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
@@ -211,7 +266,7 @@ export default function Passbook({ data, setData }) {
                 </button>
               )
             })}
-          </div>
+          </ScrollablePills>
         )}
       </div>
 
