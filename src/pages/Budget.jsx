@@ -56,6 +56,154 @@ const WarnIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
   </svg>
 )
+const CopyIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
+    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+  </svg>
+)
+
+function CopyBudgetModal({ budget, subCount, onCopy, onClose }) {
+  const isMonthly = budget.period === 'monthly'
+  const availableYears = Array.from({ length: 5 }, (_, i) => _currentYear - 1 + i)
+
+  const [targetYear, setTargetYear]       = useState(budget.year)
+  const [selectedMonths, setSelectedMonths] = useState(new Set())
+  const [selectedYears, setSelectedYears]   = useState(new Set())
+
+  const toggleMonth = (m) => setSelectedMonths((prev) => {
+    const n = new Set(prev); n.has(m) ? n.delete(m) : n.add(m); return n
+  })
+  const toggleYear = (y) => setSelectedYears((prev) => {
+    const n = new Set(prev); n.has(y) ? n.delete(y) : n.add(y); return n
+  })
+
+  const allMonths = Array.from({ length: 12 }, (_, i) => i)
+    .filter((m) => !(m === budget.month && targetYear === budget.year))
+  const allNonCurrentMonths = allMonths
+  const allSelected = isMonthly
+    ? allNonCurrentMonths.every((m) => selectedMonths.has(m))
+    : false
+
+  const toggleAll = () => {
+    if (allSelected) setSelectedMonths(new Set())
+    else setSelectedMonths(new Set(allNonCurrentMonths))
+  }
+
+  const count = isMonthly ? selectedMonths.size : selectedYears.size
+
+  const handleConfirm = () => {
+    const periods = isMonthly
+      ? [...selectedMonths].map((m) => ({ month: m, year: targetYear }))
+      : [...selectedYears].map((y) => ({ month: null, year: y }))
+    onCopy(periods)
+  }
+
+  const sc  = 'w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2.5 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500'
+  const lbl = 'block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5'
+
+  return (
+    <div className="absolute inset-0 z-50 flex flex-col justify-end" onClick={onClose}>
+      <div className="bg-white dark:bg-gray-900 rounded-t-3xl max-h-[85vh] flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="px-5 pt-4 pb-4 shrink-0 border-b border-gray-100 dark:border-gray-800">
+          <div className="w-10 h-1 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-3" />
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-gray-800 dark:text-white">Copy Budget</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate max-w-[220px]">"{budget.label}"</p>
+            </div>
+            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-lg">×</button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+          {isMonthly ? (
+            <>
+              <div>
+                <span className={lbl}>Copy to year</span>
+                <select value={targetYear} onChange={(e) => { setTargetYear(Number(e.target.value)); setSelectedMonths(new Set()) }} className={sc}>
+                  {availableYears.map((y) => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className={lbl.replace('mb-1.5', '')}>Select months</span>
+                  <button onClick={toggleAll} className="text-[11px] font-semibold text-indigo-500 dark:text-indigo-400">
+                    {allSelected ? 'Clear all' : 'Select all'}
+                  </button>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {MONTHS_SHORT.map((m, i) => {
+                    const isCurrent = i === budget.month && targetYear === budget.year
+                    const isSelected = selectedMonths.has(i)
+                    return (
+                      <button key={i} disabled={isCurrent} onClick={() => toggleMonth(i)}
+                        className={`py-2.5 rounded-xl text-xs font-semibold transition-colors ${
+                          isCurrent
+                            ? 'bg-gray-100 dark:bg-gray-700/50 text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                            : isSelected
+                              ? 'bg-indigo-500 text-white shadow-sm'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 active:bg-gray-200 dark:active:bg-gray-600'
+                        }`}
+                      >{m}</button>
+                    )
+                  })}
+                </div>
+                {selectedMonths.size > 0 && (
+                  <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-2">
+                    {selectedMonths.size} month{selectedMonths.size > 1 ? 's' : ''} selected
+                  </p>
+                )}
+              </div>
+            </>
+          ) : (
+            <div>
+              <span className={lbl}>Select years to copy to</span>
+              <div className="flex flex-wrap gap-2">
+                {availableYears.map((y) => {
+                  const isCurrent = y === budget.year
+                  const isSelected = selectedYears.has(y)
+                  return (
+                    <button key={y} disabled={isCurrent} onClick={() => toggleYear(y)}
+                      className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                        isCurrent
+                          ? 'bg-gray-100 dark:bg-gray-700/50 text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                          : isSelected
+                            ? 'bg-indigo-500 text-white shadow-sm'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                      }`}
+                    >{y}</button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {subCount > 0 && (
+            <div className="flex items-start gap-2.5 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl px-4 py-3">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5">
+                <circle cx="12" cy="12" r="10" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01" />
+              </svg>
+              <p className="text-xs text-indigo-600 dark:text-indigo-400 leading-relaxed">
+                {subCount} sub-budget{subCount > 1 ? 's' : ''} will also be copied to each selected period.
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="px-5 py-4 border-t border-gray-100 dark:border-gray-800 shrink-0 flex gap-3">
+          <button onClick={onClose} className="flex-1 py-3.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-semibold text-sm">Cancel</button>
+          <button onClick={handleConfirm} disabled={count === 0}
+            className="flex-1 py-3.5 rounded-xl bg-indigo-500 text-white font-semibold text-sm disabled:opacity-40 active:bg-indigo-600 transition-colors"
+          >
+            Copy to {count > 0 ? count : ''} {isMonthly ? (count === 1 ? 'month' : 'months') : (count === 1 ? 'year' : 'years')}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function BudgetFormModal({ initial, presetParentId, allBudgets, accounts, tags, onSave, onClose }) {
   const [parentId, setParentId] = useState(initial?.parentId ?? presetParentId ?? '')
@@ -264,6 +412,7 @@ export default function Budget({ data, setData }) {
   const [editingBudget, setEditingBudget]   = useState(null)
   const [presetParentId, setPresetParentId] = useState(null)
   const [deletingBudget, setDeletingBudget] = useState(null)
+  const [copyingBudget, setCopyingBudget]   = useState(null)
 
   const years = useMemo(() => {
     const ys = new Set(budgets.map((b) => b.year))
@@ -322,6 +471,21 @@ export default function Budget({ data, setData }) {
       budgets: (prev.budgets ?? []).filter((x) => x.id !== b.id && x.parentId !== b.id),
     }))
     setDeletingBudget(null)
+  }
+
+  const handleCopy = (periods) => {
+    const rawBudget = budgets.find((b) => b.id === copyingBudget.id)
+    const rawSubs   = budgets.filter((b) => b.parentId === copyingBudget.id)
+    const newEntries = []
+    for (const { month, year } of periods) {
+      const newRootId = genId()
+      newEntries.push({ ...rawBudget, id: newRootId, month, year })
+      for (const sub of rawSubs) {
+        newEntries.push({ ...sub, id: genId(), parentId: newRootId, month, year })
+      }
+    }
+    setData((prev) => ({ ...prev, budgets: [...(prev.budgets ?? []), ...newEntries] }))
+    setCopyingBudget(null)
   }
 
   const getAccount = (id) => accounts.find((a) => a.id === id)
@@ -436,6 +600,7 @@ export default function Budget({ data, setData }) {
                     <div className={`w-1.5 h-1.5 rounded-full ${b.status.dotCls}`} />
                     <span className={`text-[10px] font-bold ${b.status.textCls}`}>{b.status.label}</span>
                   </div>
+                  <button onClick={() => setCopyingBudget(b)} className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-400" title="Copy to other months"><CopyIcon /></button>
                   <button onClick={() => openEdit(b)} className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-400"><PencilIcon /></button>
                   <button onClick={() => setDeletingBudget(b)} className="p-1.5 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-400"><TrashIcon /></button>
                 </div>
@@ -564,6 +729,16 @@ export default function Budget({ data, setData }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Copy modal */}
+      {copyingBudget && (
+        <CopyBudgetModal
+          budget={copyingBudget}
+          subCount={budgets.filter((b) => b.parentId === copyingBudget.id).length}
+          onCopy={handleCopy}
+          onClose={() => setCopyingBudget(null)}
+        />
       )}
 
       {/* Create / Edit form */}
