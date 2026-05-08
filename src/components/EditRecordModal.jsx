@@ -6,11 +6,12 @@ const TYPES = [
   { key: 'transfer', label: 'Transfer', active: 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 ring-1 ring-blue-200 dark:ring-blue-800' },
 ]
 
-const AMOUNT_COLOR      = { expense: 'text-red-500',   income: 'text-green-500',   transfer: 'text-blue-500' }
+const AMOUNT_COLOR      = { expense: 'text-red-500', income: 'text-green-500', transfer: 'text-blue-500', adjustment: 'text-purple-500' }
 const PLACEHOLDER_COLOR = {
-  expense:  'placeholder:text-red-300 dark:placeholder:text-red-800',
-  income:   'placeholder:text-green-300 dark:placeholder:text-green-800',
-  transfer: 'placeholder:text-blue-300 dark:placeholder:text-blue-800',
+  expense:    'placeholder:text-red-300 dark:placeholder:text-red-800',
+  income:     'placeholder:text-green-300 dark:placeholder:text-green-800',
+  transfer:   'placeholder:text-blue-300 dark:placeholder:text-blue-800',
+  adjustment: 'placeholder:text-purple-300 dark:placeholder:text-purple-800',
 }
 
 export default function EditRecordModal({ record, accounts, tags, onSave, onClose }) {

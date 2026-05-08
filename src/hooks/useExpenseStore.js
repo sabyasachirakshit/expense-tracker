@@ -4,6 +4,7 @@ const STORAGE_KEY = 'expense-tracker-data'
 
 const defaultData = {
   records: [],
+  budgets: [],
   accounts: [{ id: 'wallet', name: 'Wallet', balance: 0 }],
   tags: [
     { id: 'food', name: 'Food', color: '#f97316' },

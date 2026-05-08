@@ -12,6 +12,8 @@ function fmtShort(n) {
 
 export default function Dashboard({ data }) {
   const { records = [], accounts = [], tags = [] } = data
+  const isDark = data.settings?.darkMode ?? false
+  const tickFill = isDark ? '#9ca3af' : '#6b7280'
   const now = new Date()
   const [filterMonth, setFilterMonth]   = useState(-1)
   const [filterYear, setFilterYear]     = useState(now.getFullYear())
@@ -63,6 +65,14 @@ export default function Dashboard({ data }) {
   ], [totalIncome, totalExpense])
 
   const selectCls = 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none'
+
+  const tooltipStyle = {
+    backgroundColor: isDark ? '#1f2937' : '#fff',
+    border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`,
+    borderRadius: '12px',
+  }
+  const tooltipLabelStyle = { color: isDark ? '#f3f4f6' : '#111827', fontWeight: 600, fontSize: 11 }
+  const tooltipItemStyle  = { color: isDark ? '#d1d5db' : '#374151', fontSize: 12 }
 
   return (
     <div className="min-h-full bg-gray-50 dark:bg-gray-900 flex flex-col overflow-x-hidden">
@@ -174,9 +184,9 @@ export default function Dashboard({ data }) {
           <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Monthly Trend</h3>
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={monthlyData}>
-              <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="#9ca3af" />
-              <YAxis tick={{ fontSize: 11 }} stroke="#9ca3af" />
-              <Tooltip formatter={(v) => `₹${Number(v).toLocaleString('en-IN')}`} />
+              <XAxis dataKey="month" tick={{ fontSize: 11, fill: tickFill }} stroke={isDark ? '#374151' : '#e5e7eb'} />
+              <YAxis tick={{ fontSize: 11, fill: tickFill }} stroke={isDark ? '#374151' : '#e5e7eb'} />
+              <Tooltip formatter={(v) => `₹${Number(v).toLocaleString('en-IN')}`} contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} itemStyle={tooltipItemStyle} />
               <Line type="monotone" dataKey="income" stroke={COLORS.income} strokeWidth={2} dot={{ r: 3 }} />
               <Line type="monotone" dataKey="expense" stroke={COLORS.expense} strokeWidth={2} dot={{ r: 3 }} />
             </LineChart>
@@ -188,9 +198,9 @@ export default function Dashboard({ data }) {
           <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Monthly Comparison</h3>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={monthlyData}>
-              <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="#9ca3af" />
-              <YAxis tick={{ fontSize: 11 }} stroke="#9ca3af" />
-              <Tooltip formatter={(v) => `₹${Number(v).toLocaleString('en-IN')}`} />
+              <XAxis dataKey="month" tick={{ fontSize: 11, fill: tickFill }} stroke={isDark ? '#374151' : '#e5e7eb'} />
+              <YAxis tick={{ fontSize: 11, fill: tickFill }} stroke={isDark ? '#374151' : '#e5e7eb'} />
+              <Tooltip formatter={(v) => `₹${Number(v).toLocaleString('en-IN')}`} contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} itemStyle={tooltipItemStyle} />
               <Bar dataKey="income" fill={COLORS.income} />
               <Bar dataKey="expense" fill={COLORS.expense} />
             </BarChart>
