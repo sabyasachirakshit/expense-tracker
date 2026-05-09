@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import Dashboard from './pages/Dashboard'
 import CreateRecord from './pages/CreateRecord'
 import Passbook from './pages/Passbook'
@@ -57,6 +57,41 @@ function App() {
     })
   }
 
+  const fileInputRef = useRef(null)
+
+  const handleExport = () => {
+    const json = JSON.stringify(data, null, 2)
+    const blob = new Blob([json], { type: 'application/json' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href     = url
+    a.download = `expense-tracker-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleImportFile = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (evt) => {
+      try {
+        const parsed = JSON.parse(evt.target.result)
+        if (typeof parsed !== 'object' || !Array.isArray(parsed.accounts) || !Array.isArray(parsed.records)) {
+          alert('Invalid backup file — missing accounts or records.')
+          return
+        }
+        if (window.confirm(`Import "${file.name}"?\nThis will replace ALL current data.`)) {
+          setData(parsed)
+        }
+      } catch {
+        alert('Failed to read file. Make sure it is a valid JSON backup.')
+      }
+      e.target.value = ''
+    }
+    reader.readAsText(file)
+  }
+
   const handleToggleDark = () => {
     setData((prev) => ({
       ...prev,
@@ -81,11 +116,20 @@ function App() {
           />
         ) : (
           <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json,application/json"
+              className="hidden"
+              onChange={handleImportFile}
+            />
             <TopBar
               accounts={data.accounts}
               onManage={() => setShowAccounts(true)}
               isDark={isDark}
               onToggleDark={handleToggleDark}
+              onExport={handleExport}
+              onImport={() => fileInputRef.current?.click()}
             />
             <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
               <PageComponent data={data} setData={setData} />
