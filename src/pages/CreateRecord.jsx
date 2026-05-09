@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import TagPickerModal from '../components/TagPickerModal'
 
 const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 5)
@@ -31,7 +31,7 @@ function Field({ label, hint, children }) {
 }
 
 export default function CreateRecord({ data, setData }) {
-  const { accounts = [], tags = [] } = data
+  const { accounts = [], tags = [], records = [] } = data
 
   const [type, setType]               = useState('expense')
   const [amount, setAmount]           = useState('')
@@ -48,6 +48,24 @@ export default function CreateRecord({ data, setData }) {
   const [selectedTags, setSelectedTags] = useState([])
   const [showTagModal, setShowTagModal] = useState(false)
   const [saved, setSaved]             = useState(false)
+
+  const titleSuggestions = useMemo(() => {
+    const seen = new Set()
+    const out  = []
+    for (const r of records) {
+      const t = r.title?.trim()
+      if (t && !seen.has(t.toLowerCase())) { seen.add(t.toLowerCase()); out.push(t) }
+    }
+    return out
+  }, [records])
+
+  const filteredSuggestions = useMemo(() => {
+    const q = title.trim().toLowerCase()
+    if (!q) return []
+    return titleSuggestions
+      .filter((t) => t.toLowerCase().includes(q) && t.toLowerCase() !== q)
+      .slice(0, 6)
+  }, [title, titleSuggestions])
 
   const handleAccountChange = (id) => {
     setAccountId(id)
@@ -172,15 +190,34 @@ export default function CreateRecord({ data, setData }) {
         )}
 
         {/* Title */}
-        <Field label="Title">
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Grocery shopping"
-            className={inputCls}
-          />
-        </Field>
+        <div className="relative">
+          <Field label="Title">
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Grocery shopping"
+              className={inputCls}
+              autoComplete="off"
+            />
+          </Field>
+          {filteredSuggestions.length > 0 && (
+            <div className="absolute left-0 right-0 top-full z-30 mt-1 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden">
+              {filteredSuggestions.map((s) => (
+                <button
+                  key={s}
+                  onMouseDown={(e) => { e.preventDefault(); setTitle(s) }}
+                  className="w-full px-4 py-3 text-left text-sm text-gray-700 dark:text-gray-200 flex items-center gap-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/60 border-b border-gray-50 dark:border-gray-700/40 last:border-0 active:bg-gray-100 dark:active:bg-gray-700 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5 text-gray-300 dark:text-gray-600 shrink-0">
+                    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  <span className="truncate">{s}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Description */}
         <Field label="Description" hint="(optional)">
